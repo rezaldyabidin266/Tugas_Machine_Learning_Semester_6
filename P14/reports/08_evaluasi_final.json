@@ -1,0 +1,27 @@
+{
+  "model_terpilih": "SVM",
+  "n_fitur_model": 25,
+  "catatan_inferensi": "Input model_terbaik.joblib harus memuat 25 fitur (20 asli + 5 fitur turunan).",
+  "pemilihan_berdasarkan": "F1 macro 5-fold CV pada data train saja",
+  "cv_f1_macro": 0.8982822982558029,
+  "cv_f1_std": 0.0079247011940919,
+  "accuracy_test": 0.9175,
+  "precision_macro_test": 0.9171479080553686,
+  "recall_macro_test": 0.9175,
+  "f1_macro_test": 0.9171734396280385,
+  "balanced_accuracy_test": 0.9175,
+  "n_train": 1600,
+  "n_test": 400,
+  "random_state": 42,
+  "best_params": {
+    "model__C": 5,
+    "model__gamma": 0.01
+  },
+  "label_kelas": {
+    "0": "Low",
+    "1": "Medium",
+    "2": "High",
+    "3": "Very High"
+  },
+  "catatan": "Kategori harga relatif, tidak merepresentasikan harga rupiah; data Kaggle memiliki fitur spesifikasi saja."
+}

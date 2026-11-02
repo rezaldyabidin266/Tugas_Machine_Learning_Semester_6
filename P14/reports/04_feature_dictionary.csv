@@ -1,0 +1,6 @@
+fitur_baru,rumus,tujuan
+pixel_area,px_height * px_width,perkiraan total piksel layar
+screen_area,sc_h * sc_w,perkiraan ukuran layar
+battery_per_weight,"battery_power / max(mobile_wt, 1)",rasio baterai terhadap bobot
+camera_total,fc + pc,gabungan ukuran kamera
+connectivity_count,blue + four_g + three_g + wifi,jumlah teknologi konektivitas

@@ -5,6 +5,8 @@ Tidak melatih model; scaling hanya demonstrasi agar tidak bocor ke test set.
 """
 from pathlib import Path
 import sys
+import os
+import matplotlib
 
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button
@@ -13,7 +15,48 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-BASE = Path(__file__).resolve().parent if "__file__" in globals() else Path.cwd()
+
+
+def find_project_root():
+    """Works for .py from any CWD, VS Code notebooks, and Google Colab."""
+    if "__file__" in globals():
+        return Path(__file__).resolve().parent
+    here = Path.cwd()
+    candidates = (here, here / "P14", here.parent / "P14")
+    for candidate in candidates:
+        if (candidate / "Mobile_Price_Classification" / "train.csv").is_file():
+            return candidate
+        if (candidate / "train.csv").is_file():
+            return candidate
+    if (here / "P14").is_dir():
+        return here / "P14"
+    return here
+
+
+def get_dataset_path():
+    """train.csv must contain price_range (Kaggle test.csv has no labels)."""
+    candidates = (
+        BASE / "Mobile_Price_Classification" / "train.csv",
+        BASE / "train.csv",
+    )
+    found = next((candidate for candidate in candidates if candidate.is_file()), None)
+    if found is None and "google.colab" in sys.modules:
+        from google.colab import files
+        print("Upload train.csv (bukan test.csv) dari Kaggle Mobile Price Classification:")
+        uploaded = files.upload()
+        if "train.csv" not in uploaded:
+            raise FileNotFoundError("Nama file yang di-upload harus train.csv")
+        found = Path.cwd() / "train.csv"
+    if found is None:
+        raise FileNotFoundError(
+            "train.csv tidak ditemukan. Simpan pada:\n"
+            f"  {BASE / 'Mobile_Price_Classification' / 'train.csv'}\n"
+            "atau (khusus notebook/Colab) pada folder kerja saat ini.\n"
+            "Dataset: https://www.kaggle.com/datasets/iabhishekofficial/mobile-price-classification"
+        )
+    return found
+
+BASE = find_project_root()
 DATA = BASE / "Mobile_Price_Classification" / "train.csv"
 FIGURES = BASE / "figures" / "03_preprocessing"
 PROCESSED = BASE / "Mobile_Price_Classification" / "processed"
@@ -22,21 +65,11 @@ FIGURES.mkdir(parents=True, exist_ok=True)
 
 def load_dataset():
     global DATA, PROCESSED
-    if not DATA.exists():
-        DATA = BASE / "train.csv"
-    if not DATA.exists() and "google.colab" in sys.modules:
-        from google.colab import files
-        print("Upload train.csv dari Kaggle:")
-        uploaded = files.upload()
-        if "train.csv" not in uploaded:
-            raise FileNotFoundError("Harus mengunggah train.csv")
-        DATA = Path.cwd() / "train.csv"
-    if not DATA.exists():
-        raise FileNotFoundError(f"File tidak ditemukan: {DATA}")
+    DATA = get_dataset_path()
     PROCESSED = DATA.parent / "processed"
     df = pd.read_csv(DATA)
     if "price_range" not in df.columns:
-        raise ValueError("Gunakan train.csv (wajib ada kolom price_range)")
+        raise ValueError("train.csv harus punya kolom price_range; jangan gunakan test.csv")
     return df
 
 
@@ -49,13 +82,16 @@ def save_chart(fig, name, figures):
 
 def show_gallery(figures):
     """Satu window dengan Previous/Next; Colab menampilkan grafik inline."""
-    if "google.colab" in sys.modules:
+    if "google.colab" in sys.modules or "ipykernel" in sys.modules:
         from IPython.display import display, Image
         for path in figures:
             print(path.name)
             display(Image(filename=str(path)))
         return
 
+    if os.environ.get("P14_NO_GUI") == "1" or matplotlib.get_backend().lower() == "agg":
+        print(f"Grafik tersimpan: {len(figures)} file PNG.")
+        return
     index = [0]
     window, ax = plt.subplots(figsize=(11, 7))
     window.subplots_adjust(bottom=0.16, top=0.92)

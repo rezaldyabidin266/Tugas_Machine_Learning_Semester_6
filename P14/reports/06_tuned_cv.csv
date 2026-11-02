@@ -1,0 +1,4 @@
+model,f1_macro_cv_mean,f1_macro_cv_std,accuracy_cv_mean,balanced_accuracy_cv_mean,fit_seconds_mean,total_search_seconds,best_params,n_candidates
+SVM,0.8982822982558029,0.007924701194091993,0.898125,0.898125,0.11858272552490234,9.667218300048262,"{""model__C"": 5, ""model__gamma"": 0.01}",8
+Random Forest,0.8858122374005368,0.01720908844089321,0.8862500000000001,0.8862500000000001,0.9007306098937988,30.454602499958128,"{""model__max_depth"": 12, ""model__min_samples_leaf"": 1, ""model__n_estimators"": 150}",8
+Decision Tree,0.8358541148431555,0.022065317797159093,0.83625,0.83625,0.04324040412902832,1.8160022001247853,"{""model__max_depth"": null, ""model__min_samples_leaf"": 3}",8

@@ -8,13 +8,58 @@ Gunakan tombol Previous / Next atau tombol panah kiri / kanan.
 """
 
 from pathlib import Path
+import sys
+import os
+import matplotlib
 
 import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.widgets import Button
 
 
-BASE_DIR = Path(__file__).resolve().parent
+
+
+def find_project_root():
+    """Works for .py from any CWD, VS Code notebooks, and Google Colab."""
+    if "__file__" in globals():
+        return Path(__file__).resolve().parent
+    here = Path.cwd()
+    candidates = (here, here / "P14", here.parent / "P14")
+    for candidate in candidates:
+        if (candidate / "Mobile_Price_Classification" / "train.csv").is_file():
+            return candidate
+        if (candidate / "train.csv").is_file():
+            return candidate
+    if (here / "P14").is_dir():
+        return here / "P14"
+    return here
+
+
+def get_dataset_path():
+    """train.csv must contain price_range (Kaggle test.csv has no labels)."""
+    candidates = (
+        BASE / "Mobile_Price_Classification" / "train.csv",
+        BASE / "train.csv",
+    )
+    found = next((candidate for candidate in candidates if candidate.is_file()), None)
+    if found is None and "google.colab" in sys.modules:
+        from google.colab import files
+        print("Upload train.csv (bukan test.csv) dari Kaggle Mobile Price Classification:")
+        uploaded = files.upload()
+        if "train.csv" not in uploaded:
+            raise FileNotFoundError("Nama file yang di-upload harus train.csv")
+        found = Path.cwd() / "train.csv"
+    if found is None:
+        raise FileNotFoundError(
+            "train.csv tidak ditemukan. Simpan pada:\n"
+            f"  {BASE / 'Mobile_Price_Classification' / 'train.csv'}\n"
+            "atau (khusus notebook/Colab) pada folder kerja saat ini.\n"
+            "Dataset: https://www.kaggle.com/datasets/iabhishekofficial/mobile-price-classification"
+        )
+    return found
+
+BASE_DIR = find_project_root()
+BASE = BASE_DIR
 DATASET_PATH = BASE_DIR / "Mobile_Price_Classification" / "train.csv"
 OUTPUT_DIR = BASE_DIR / "figures" / "01_data_understanding"
 CLASS_LABELS = {
@@ -26,12 +71,8 @@ CLASS_LABELS = {
 
 
 def load_data() -> pd.DataFrame:
-    if not DATASET_PATH.is_file():
-        raise FileNotFoundError(
-            f"Dataset tidak ditemukan: {DATASET_PATH}\n"
-            "Pastikan train.csv berada di folder Mobile_Price_Classification."
-        )
-
+    global DATASET_PATH
+    DATASET_PATH = get_dataset_path()
     data = pd.read_csv(DATASET_PATH)
     if "price_range" not in data.columns:
         raise ValueError("Kolom price_range tidak ditemukan. Gunakan train.csv.")
@@ -50,6 +91,15 @@ def save_chart(fig, filename: str) -> Path:
 def open_gallery(charts: list[tuple[str, Path]]) -> None:
     """Satu jendela untuk semua grafik, dengan tombol dan keyboard navigasi."""
     if not charts:
+        return
+    if "ipykernel" in sys.modules or "google.colab" in sys.modules:
+        from IPython.display import display, Image
+        for name, path in charts:
+            print(name)
+            display(Image(filename=str(path)))
+        return
+    if os.environ.get("P14_NO_GUI") == "1" or matplotlib.get_backend().lower() == "agg":
+        print(f"Grafik berhasil disimpan: {len(charts)} file PNG.")
         return
 
     # PNG sudah dibuat, jadi tidak perlu menggambar ulang grafik saat pindah.
